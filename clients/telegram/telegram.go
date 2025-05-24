@@ -1,6 +1,10 @@
 package telegram
 
-import "net/http"
+import (
+	"net/http"
+	"net/url"
+	"strconv"
+)
 
 type Client struct {
 	host     string
@@ -18,4 +22,12 @@ func New(host string, token string) Client {
 
 func newBasePath(token string) string {
 	return "bot" + token
+}
+
+func (c *Client) Update(offset int, limit int) ([]Update, error) {
+	q := url.Values{}
+	q.Add("offset", strconv.Itoa(offset))
+	q.Add("limit", strconv.Itoa(limit))
+
+	// do request
 }
