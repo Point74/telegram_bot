@@ -1,5 +1,10 @@
 package main
 
+import (
+	"flag"
+	"log"
+)
+
 func main() {
 	// token = flags.Get(token)
 
@@ -10,4 +15,20 @@ func main() {
 	// processor = processor.New(tgClient)
 
 	// consumer.Start(fetcher, processor)
+}
+
+func mustToken() string {
+	token := flag.String(
+		`token-bot-client`,
+		"",
+		"token for access to telegram bot",
+	)
+
+	flag.Parse()
+
+	if *token == "" {
+		log.Fatal("token is not specified")
+	}
+
+	return *token
 }
