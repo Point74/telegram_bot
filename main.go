@@ -19,7 +19,7 @@ func main() {
 
 func mustToken() string {
 	token := flag.String(
-		`token-bot-client`,
+		`tg-bot-token`,
 		"",
 		"token for access to telegram bot",
 	)
@@ -31,4 +31,16 @@ func mustToken() string {
 	}
 
 	return *token
+}
+
+func Host() string {
+	host := flag.String(
+		"",
+		`api.telegram.org`,
+		"host for access to telegram bot",
+	)
+
+	flag.Parse()
+
+	return *host
 }
