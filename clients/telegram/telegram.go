@@ -1,8 +1,11 @@
 package telegram
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"path"
 	"strconv"
 )
 
@@ -30,4 +33,37 @@ func (c *Client) Update(offset int, limit int) ([]Update, error) {
 	q.Add("limit", strconv.Itoa(limit))
 
 	// do request
+}
+
+func (c *Client) doRequest(method string, query url.Values) ([]byte, error) {
+	u := url.URL{
+		Scheme: "https",
+		Host:   c.host,
+		Path:   path.Join(c.basePath, method),
+	}
+
+	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("can't do request : %w", err)
+	}
+
+	req.URL.RawQuery = query.Encode()
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("can't do request : %w", err)
+	}
+
+	req.URL.RawQuery = query.Encode()
+
+	resp, err = c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("can't do request : %w", err)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("can't read response body : %w", err)
+	}
+
+	return body, nil
 }
