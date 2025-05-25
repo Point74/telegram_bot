@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
@@ -15,6 +16,10 @@ type Client struct {
 	client   http.Client
 }
 
+const (
+	getUpdatesMethod = "getUpdates"
+)
+
 func New(host string, token string) Client {
 	return Client{
 		host:     host,
@@ -27,12 +32,25 @@ func newBasePath(token string) string {
 	return "bot" + token
 }
 
-func (c *Client) Update(offset int, limit int) ([]Update, error) {
+func (c *Client) Update(offset int, limit int) (updates []Update, err error) {
+	defer func() { err = e.WrapIfErr("can't do request", err) }()
+
 	q := url.Values{}
 	q.Add("offset", strconv.Itoa(offset))
 	q.Add("limit", strconv.Itoa(limit))
 
-	// do request
+	data, err := c.doRequest(getUpdatesMethod, q)
+	if err != nil {
+		return nil, err
+	}
+
+	var res UpdatesResponse
+
+	if err := json.Unmarshal(data, &res); err != nil {
+		return nil, err
+	}
+
+	return res.Result, nil
 }
 
 func (c *Client) doRequest(method string, query url.Values) (data []byte, err error) {
