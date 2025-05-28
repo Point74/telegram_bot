@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"telegram_bot/storage"
 )
@@ -32,4 +33,24 @@ func (s *Storage) Save(ctx context.Context, p *storage.Page) error {
 	}
 
 	return nil
+}
+
+func (s *Storage) PickRandom(ctx context.Context, userName string) (*storage.Page, error) {
+	q := `SELECT * FROM pages WHERE user_name = ? ORDER BY RANDOM() LIMIT 1`
+
+	var url string
+
+	err := s.db.QueryRowContext(ctx, q, userName).Scan(&url)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("can't pick random page: %w", err)
+	}
+
+	return &storage.Page{
+		URL:      url,
+		UserName: userName,
+	}, nil
 }
