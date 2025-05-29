@@ -64,3 +64,15 @@ func (s *Storage) Remove(ctx context.Context, p *storage.Page) error {
 
 	return nil
 }
+
+func (s *Storage) IsExist(ctx context.Context, p *storage.Page) (bool, error) {
+	q := `SELECT COUNT(*) FROM pages WHERE count = ? AND user_name = ?`
+
+	var count int
+
+	if err := s.db.QueryRowContext(ctx, q, p.URL, p.UserName).Scan(&count); err != nil {
+		return false, fmt.Errorf("can't check if page: %w", err)
+	}
+
+	return count > 0, nil
+}
