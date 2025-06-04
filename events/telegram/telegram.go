@@ -24,6 +24,24 @@ func New(client *telegram.Client, storage storage.Storage) *Processor {
 	}
 }
 
+func event(upd telegram.Update) events.Event {
+	updType := fetchType(upd)
+
+	res := events.Event{
+		Type: updType,
+		Text: fetchText(upd),
+	}
+
+	if updType == events.Message {
+		res.Meta = Meta{
+			ChatId:   upd.Message.Chat.ID,
+			Username: upd.Message.From.Username,
+		}
+	}
+
+	return res
+}
+
 func fetchText(upd telegram.Update) string {
 	if upd.Message == nil {
 		return ""
