@@ -12,6 +12,11 @@ type Processor struct {
 	storage storage.Storage
 }
 
+type Meta struct {
+	ChatId   int
+	Username string
+}
+
 func New(client *telegram.Client, storage storage.Storage) *Processor {
 	return &Processor{
 		tg:      client,
