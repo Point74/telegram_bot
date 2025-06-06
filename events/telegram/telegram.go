@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"errors"
 	"telegram_bot/clients/telegram"
 	"telegram_bot/events"
 	"telegram_bot/lib/e"
@@ -17,6 +18,8 @@ type Meta struct {
 	ChatId   int
 	Username string
 }
+
+var ErrUnknownEventType = errors.New("unknown event type")
 
 func New(client *telegram.Client, storage storage.Storage) *Processor {
 	return &Processor{
@@ -62,6 +65,15 @@ func event(upd telegram.Update) events.Event {
 	}
 
 	return res
+}
+
+func (p *Processor) Process(event events.Event) error {
+	switch event.Type {
+	case events.Message:
+		return p.processMessage(event)
+	default:
+		return e.Wrap("can't process message", ErrUnknownEventType)
+	}
 }
 
 func fetchText(upd telegram.Update) string {
