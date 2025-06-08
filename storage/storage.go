@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"io"
 	"telegram_bot/lib/e"
@@ -19,6 +20,8 @@ type Page struct {
 	URL      string
 	UserName string
 }
+
+var ErrNoSavesPages = errors.New("no saves pages")
 
 func (p Page) Hash() (string, error) {
 	h := sha1.New()
