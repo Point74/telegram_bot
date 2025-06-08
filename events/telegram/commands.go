@@ -27,10 +27,13 @@ func (p *Processor) doCmd(ctx context.Context, text string, chatID int, username
 
 	switch text {
 	case RndCmd:
+		return p.sendRandom(ctx, chatID, username)
 	case HelpCmd:
+		return p.sendHelp(chatID)
 	case StartCmd:
+		return p.sendHello(chatID)
 	default:
-
+		return p.tg.SendMessage(chatID, msgUnknownCommand)
 	}
 }
 
@@ -81,11 +84,11 @@ func (p *Processor) sendRandom(ctx context.Context, chatID int, username string)
 	return p.storage.Remove(ctx, page)
 }
 
-func (p *Processor) SendHelp(chatID int) error {
+func (p *Processor) sendHelp(chatID int) error {
 	return p.tg.SendMessage(chatID, msgHelp)
 }
 
-func (p *Processor) SendHello(chatID int) error {
+func (p *Processor) sendHello(chatID int) error {
 	return p.tg.SendMessage(chatID, msgHello)
 }
 
