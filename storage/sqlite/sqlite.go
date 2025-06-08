@@ -12,8 +12,6 @@ type Storage struct {
 	db *sql.DB
 }
 
-var ErrNoSavesPages = errors.New("no saves pages")
-
 func New(path string) (*Storage, error) {
 	db, err := sql.Open("sqlite3", path)
 	if err != nil {
@@ -44,7 +42,7 @@ func (s *Storage) PickRandom(ctx context.Context, userName string) (*storage.Pag
 
 	err := s.db.QueryRowContext(ctx, q, userName).Scan(&url)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, ErrNoSavesPages
+		return nil, storage.ErrNoSavesPages
 	}
 
 	if err != nil {
