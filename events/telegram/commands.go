@@ -2,10 +2,10 @@ package telegram
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/url"
 	"strings"
-	"telegram_bot/clients/telegram"
 	"telegram_bot/lib/e"
 	"telegram_bot/storage"
 )
@@ -37,8 +37,6 @@ func (p *Processor) doCmd(ctx context.Context, text string, chatID int, username
 func (p *Processor) savePage(ctx context.Context, chatID int, pageURL string, username string) (err error) {
 	defer func() { err = e.WrapIfErr("can't do command: save page", err) }()
 
-	sendMsg := NewMessageSender(chatID, p.tg)
-
 	page := &storage.Page{
 		URL:      pageURL,
 		UserName: username,
@@ -50,24 +48,37 @@ func (p *Processor) savePage(ctx context.Context, chatID int, pageURL string, us
 	}
 
 	if isExists {
-		return sendMsg(msgAlreadyExist)
+		return p.tg.SendMessage(chatID, msgAlreadyExist)
 	}
 
 	if err := p.storage.Save(ctx, page); err != nil {
 		return err
 	}
 
-	if err := sendMsg(msgSaved); err != nil {
+	if err := p.tg.SendMessage(chatID, msgSaved); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewMessageSender(chatID int, tg *telegram.Client) func(string) error {
-	return func(msg string) error {
-		return tg.SendMessage(chatID, msg)
+func (p *Processor) sendRandom(ctx context.Context, chatID int, username string) (err error) {
+	defer func() { err = e.WrapIfErr("can't do command: can't send random", err) }()
+
+	page, err := p.storage.PickRandom(ctx, username)
+	if err != nil && errors.Is(err, storage.ErrNoSavesPages) {
+		return err
 	}
+
+	if errors.Is(err, storage.ErrNoSavesPages) {
+		return
+	}
+
+	if err := p.tg.SendMessage(chatID, page.URL); err != nil {
+		return err
+	}
+
+	return p.storage.Remove(ctx, page)
 }
 
 func isAddCmd(text string) bool {
