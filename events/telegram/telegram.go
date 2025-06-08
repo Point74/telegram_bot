@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"context"
 	"errors"
 	"telegram_bot/clients/telegram"
 	"telegram_bot/events"
@@ -70,22 +71,24 @@ func event(upd telegram.Update) events.Event {
 	return res
 }
 
-func (p *Processor) Process(event events.Event) error {
+func (p *Processor) Process(ctx context.Context, event events.Event) error {
 	switch event.Type {
 	case events.Message:
-		return p.processMessage(event)
+		return p.processMessage(ctx, event)
 	default:
 		return e.Wrap("can't process message", ErrUnknownEventType)
 	}
 }
 
-func (p *Processor) processMessage(event events.Event) error {
+func (p *Processor) processMessage(ctx context.Context, event events.Event) error {
 	meta, err := meta(event)
 	if err != nil {
 		return e.Wrap("can't process message", err)
 	}
 
-	//
+	if err := p.doCmd(ctx, event.Text, meta.ChatId, meta.Username); err != nil {
+		return e.Wrap("can't process message", err)
+	}
 
 	return nil
 }
