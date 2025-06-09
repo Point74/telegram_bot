@@ -1,6 +1,7 @@
 package event_consumer
 
 import (
+	"context"
 	"log"
 	"telegram_bot/events"
 	"time"
@@ -20,9 +21,11 @@ func New(fetcher events.Fetcher, processor events.Processor, batchSize int) Cons
 	}
 }
 
-func (c *Consumer) Start() error {
+func (c Consumer) Start() error {
+	ctx := context.Background()
+
 	for {
-		gotEvents, err := c.fetcher.Fetch(c.batchSize)
+		gotEvents, err := c.fetcher.Fetch(ctx, c.batchSize)
 		if err != nil {
 			log.Printf("[ERR] consumer :%s", err.Error())
 
@@ -34,17 +37,17 @@ func (c *Consumer) Start() error {
 			continue
 		}
 
-		if err := c.handleEvents(gotEvents); err != nil {
+		if err := c.handleEvents(ctx, gotEvents); err != nil {
 			log.Printf("[ERR] handling events: %s", err)
 		}
 	}
 }
 
-func (c *Consumer) handleEvents(events []events.Event) error {
+func (c Consumer) handleEvents(ctx context.Context, events []events.Event) error {
 	for _, event := range events {
 		log.Printf("got new event: %s", event.Text)
 
-		if err := c.processor.Process(event); err != nil {
+		if err := c.processor.Process(ctx, event); err != nil {
 			log.Printf("[ERR] can't handle event :%s", err.Error())
 
 			continue
