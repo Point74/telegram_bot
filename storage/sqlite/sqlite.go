@@ -6,6 +6,8 @@ import (
 	"errors"
 	"telegram_bot/lib/e"
 	"telegram_bot/storage"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Storage struct {
@@ -36,7 +38,7 @@ func (s *Storage) Save(ctx context.Context, p *storage.Page) error {
 }
 
 func (s *Storage) PickRandom(ctx context.Context, userName string) (*storage.Page, error) {
-	q := `SELECT * FROM pages WHERE user_name = ? ORDER BY RANDOM() LIMIT 1`
+	q := `SELECT url FROM pages WHERE user_name = ? ORDER BY RANDOM() LIMIT 1`
 
 	var url string
 
@@ -66,7 +68,7 @@ func (s *Storage) Remove(ctx context.Context, p *storage.Page) error {
 }
 
 func (s *Storage) IsExist(ctx context.Context, p *storage.Page) (bool, error) {
-	q := `SELECT COUNT(*) FROM pages WHERE count = ? AND user_name = ?`
+	q := `SELECT COUNT(*) FROM pages WHERE url = ? AND user_name = ?`
 
 	var count int
 
