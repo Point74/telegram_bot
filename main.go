@@ -1,20 +1,42 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
+	tgClient "telegram_bot/clients/telegram"
+	"telegram_bot/consumer/event-consumer"
+	"telegram_bot/events/telegram"
+	"telegram_bot/storage/sqlite"
+)
+
+const (
+	bathSize          = 100
+	sqliteStoragePath = "data/sqlite/storage.db"
 )
 
 func main() {
-	// token = flags.Get(token)
+	s, err := sqlite.New(sqliteStoragePath)
+	if err != nil {
+		log.Fatal("can't connect to storage: ", err)
+	}
 
-	// tgClient = telegram.New(token)
+	if err := s.Init(context.TODO()); err != nil {
+		log.Fatal("can't init storage ", err)
+	}
 
-	// fetcher = fetcher.New(tgClient)
+	eventsProcessor := telegram.New(
+		tgClient.New(Host(), mustToken()),
+		s,
+	)
 
-	// processor = processor.New(tgClient)
+	log.Print("start service")
 
-	// consumer.Start(fetcher, processor)
+	consumer := event_consumer.New(eventsProcessor, eventsProcessor, bathSize)
+
+	if err := consumer.Start(); err != nil {
+		log.Fatal("service is stopped ", err)
+	}
 }
 
 func mustToken() string {
@@ -39,8 +61,6 @@ func Host() string {
 		`api.telegram.org`,
 		"host for access to telegram bot",
 	)
-
-	flag.Parse()
 
 	return *host
 }
